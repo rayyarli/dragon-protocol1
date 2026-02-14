@@ -4,256 +4,224 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TERMINAL_MEGHANA // DRAGON_PROTOCOL</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
     <style>
         :root {
-            --dragon-red: #ff003c;
-            --dragon-gold: #ffcc00;
-            --bg-black: #020202;
-            --glow: 0 0 15px rgba(255, 0, 60, 0.7);
-            --section-gap: 20vh; /* Equal spacing between all pages */
+            --neon-green: #00ff41;
+            --dark-bg: #0a0a0a;
+            --terminal-font: 'Courier New', Courier, monospace;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg-black); color: #eee; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
-
-        /* SCREEN GLITCH EFFECT */
-        #glitch-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: transparent; pointer-events: none; z-index: 1001; opacity: 0.05;
-        }
-        .glitch-active { background: var(--dragon-red); opacity: 0.15 !important; }
-
-        /* ACCESS OVERLAY */
-        #access-gate {
-            position: fixed; inset: 0; background: var(--bg-black);
-            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .gate-box { border: 2px solid var(--dragon-red); padding: 40px; text-align: center; background: rgba(10,0,0,0.9); }
-        .pin-input { background: transparent; border: 1px solid var(--dragon-gold); color: var(--dragon-gold); font-size: 2rem; width: 150px; text-align: center; font-family: 'Orbitron'; margin: 20px 0; outline: none; }
-        .scan-btn { background: var(--dragon-red); color: white; padding: 15px 30px; border: none; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; letter-spacing: 2px; display: none; margin-top: 10px; box-shadow: var(--glow); }
-
-        body::before {
-            content: " "; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
-            background-size: 100% 2px, 3px 100%; z-index: 1000; pointer-events: none;
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: var(--terminal-font);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            line-height: 1.4;
         }
 
-        .hud-left { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); z-index: 100; border-left: 2px solid var(--dragon-red); padding-left: 15px; }
-        .hud-item { font-size: 10px; color: var(--dragon-red); margin-bottom: 20px; letter-spacing: 2px; }
-
-        /* REVEAL ON CURSOR MOVE */
-        .reveal-node { opacity: 0.2; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: blur(5px); }
-        section:hover .reveal-node { opacity: 1; transform: translateY(0); filter: blur(0); }
-
-        section { width: 100vw; height: 100vh; display: flex; position: relative; margin-bottom: var(--section-gap); }
-        .content-frame { flex: 0 0 55%; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 0 8%; border-right: 4px double var(--dragon-red); background: rgba(5,5,5,0.8); }
-        .visual-frame { flex: 0 0 45%; height: 100%; background: #000; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-
-        .dragon-header { font-family: 'Orbitron', sans-serif; font-size: clamp(3.5rem, 7vw, 6rem); font-weight: 900; line-height: 0.8; color: white; text-transform: uppercase; margin-bottom: 30px; }
-        .dragon-header span { color: var(--dragon-red); text-shadow: var(--glow); }
-
-        .data-box { background: rgba(255, 0, 60, 0.05); border: 1px solid rgba(255, 0, 60, 0.2); padding: 20px; margin-bottom: 15px; position: relative; }
-        .data-box::before { content: "DATA_FILE"; position: absolute; top: -10px; left: 10px; background: var(--dragon-red); color: black; font-size: 10px; padding: 2px 5px; font-weight: bold; }
-
-        .label { color: var(--dragon-gold); font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; }
-        .val { font-size: 1.8rem; font-weight: 700; color: white; }
-        .desc { font-size: 0.9rem; color: #888; margin-top: 10px; line-height: 1.6; border-top: 1px solid #222; padding-top: 10px; }
-
-        .bar-wrap { margin-top: 10px; display: flex; align-items: center; gap: 15px; }
-        .bar-bg { flex-grow: 1; height: 12px; background: #111; border: 1px solid #333; }
-        .bar-fill { height: 100%; background: var(--dragon-red); box-shadow: var(--glow); }
-        .bar-num { color: var(--dragon-gold); font-weight: bold; width: 40px; }
-
-        /* HORIZONTAL SCROLL (PAGE 5) */
-        .horizontal-wrap { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #000; margin-bottom: var(--section-gap); margin-top: var(--section-gap); }
-        .horizontal-track { display: flex; width: 400vw; height: 100vh; }
-        .slide { width: 100vw; height: 100vh; display: flex; border-right: 2px solid var(--dragon-red); }
-        .slide-visual { flex: 0 0 70%; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .slide-visual img { filter: brightness(0.3) grayscale(1); transition: 0.8s ease; }
-        .slide-visual:hover img { filter: brightness(1) grayscale(0); }
-
-        .slide:last-child .slide-visual img { filter: brightness(1) grayscale(0); transform: scale(1.6); object-fit: cover; }
-        .slide-content { flex: 0 0 30%; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 0 3%; background: #050505; }
-        .fit-img { width: 100%; height: 100%; object-fit: contain; }
-
-        .crop-container { width: 100%; height: 100%; overflow: hidden; }
-        .crop-container img { width: 100%; height: 110%; object-fit: cover; margin-top: -5%; }
-
-        /* PAGE 6 */
-        .valentine-section { 
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="red"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'), auto;
-            justify-content: center; align-items: center; text-align: center; flex-direction: column; 
-            background: radial-gradient(circle, #1a0005 0%, #000 100%);
-            padding-top: 15vh; padding-bottom: 20vh; min-height: 120vh;
+        #terminal {
+            width: 100%;
+            max-width: 800px;
+            border: 1px solid var(--neon-green);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+            box-sizing: border-box;
         }
 
-        .timer { font-size: clamp(2.5rem, 6vw, 5rem); font-family: 'Orbitron'; color: var(--dragon-gold); text-shadow: var(--glow); margin: 20px 0; }
-        .breach-alert { color: var(--dragon-red); font-weight: bold; background: rgba(255,0,0,0.1); border: 1px solid var(--dragon-red); padding: 15px; margin-top: 20px; display: none; animation: blink 0.4s infinite alternate; }
-        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
-        .btn-restricted { border: 1px solid var(--dragon-red); color: var(--dragon-red); padding: 15px 30px; font-family: 'Orbitron'; background: transparent; cursor: pointer; margin-top: 10px; }
+        .header {
+            text-align: center;
+            border-bottom: 2px double var(--neon-green);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            border-left: 4px solid var(--neon-green);
+            padding-left: 10px;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            margin-top: 30px;
+        }
+
+        /* IMAGE STYLING - Keeps them within bounds */
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--neon-green);
+            margin: 15px 0;
+            filter: grayscale(50%) contrast(120%);
+            display: block;
+        }
+
+        /* SECURITY SCAN SECTION */
+        #security-gate {
+            text-align: center;
+            padding: 40px 10px;
+        }
+
+        input {
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 10px;
+            text-align: center;
+            font-family: var(--terminal-font);
+            margin-bottom: 10px;
+            width: 200px;
+            max-width: 80%;
+        }
+
+        button {
+            background: var(--neon-green);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: var(--terminal-font);
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: white;
+        }
+
+        /* CONTENT STYLING */
+        #main-content {
+            display: none; /* Hidden until PIN is correct */
+        }
+
+        .stat-bar {
+            margin: 5px 0;
+        }
+
+        .node-item {
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        .countdown {
+            font-size: 1.5rem;
+            text-align: center;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+
+        /* MOBILE FIXES */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #terminal { padding: 15px; }
+            h2 { font-size: 1rem; }
+            .countdown { font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
 
-<div id="glitch-overlay"></div>
+<div id="terminal">
+    <div class="header">
+        <h1>TERMINAL_MEGHANA</h1>
+        <p>DRAGON_PROTOCOL // VERSION 2.0</p>
+    </div>
 
-<div id="access-gate">
-    <div class="gate-box">
-        <h2 class="dragon-header" style="font-size: 2rem;">SECURITY_CHECK</h2>
-        <input type="password" maxlength="4" class="pin-input" id="pin" placeholder="0000">
+    <div id="security-gate">
+        <h2>## SECURITY_CHECK</h2>
+        <p>INITIALIZE BIOMETRIC SCAN</p>
+        <input type="password" id="pinInput" placeholder="ENTER_PIN" autofocus>
         <br>
-        <button id="scan-trigger" class="scan-btn" onclick="startScan()">INITIALIZE BIOMETRIC SCAN</button>
-    </div>
-</div>
-
-<div class="hud-left">
-    <div class="hud-item">SYS_READY</div>
-    <div class="hud-item">AUTH_LEVEL: ADMIN</div>
-    <div class="hud-item">USER: MEGHANA</div>
-</div>
-
-<div id="main-content" style="visibility: hidden;">
-    <section>
-        <div class="content-frame reveal-node">
-            <h2 class="dragon-header">CORE<br><span>IDENTITY</span></h2>
-            <div class="data-box"><span class="label">SUBJECT_NAME</span><p class="val">MEGHANA</p></div>
-            <div class="data-box">
-                <span class="label">SUBJECT_PROFILE // THE GOLDEN NODE</span>
-                <p class="desc">A rare individual who balances sharp intelligence with a level of kindness that is hard to find. She serves as the essential stabilizer in my life—the person who keeps everything grounded. In a world full of noise, she is the constant source of light that never fades. Unmatched. Unfiltered. Indispensable.</p>
-            </div>
-            <div class="data-box"><span class="label">COORDINATES</span><p class="val">CALIFORNIA // NODE_01</p></div>
-        </div>
-        <div class="visual-frame"><img class="fit-img" src="https://i.postimg.cc/JzsLMYL6/Whats-App-Image-2026-02-13-at-2-50-33-PM.jpg"></div>
-    </section>
-
-    <section style="flex-direction: row-reverse;">
-        <div class="content-frame reveal-node" style="border-right: 0; border-left: 4px double var(--dragon-red);">
-            <h2 class="dragon-header">SYSTEM<br><span>STATS</span></h2>
-            <div class="bar-wrap"><span class="label" style="width: 150px;">HUMOR_SYNC</span><div class="bar-bg"><div class="bar-fill" style="width: 96%;"></div></div><span class="bar-num">96%</span></div>
-            <div class="bar-wrap"><span class="label" style="width: 150px;">CARE_LEVEL</span><div class="bar-bg"><div class="bar-fill" style="width: 100%;"></div></div><span class="bar-num">100%</span></div>
-            <div class="bar-wrap"><span class="label" style="width: 150px;">PSYCHO_OVERDRIVE</span><div class="bar-bg"><div class="bar-fill" style="width: 85%;"></div></div><span class="bar-num">85%</span></div>
-            <div class="bar-wrap"><span class="label" style="width: 150px;">WORKOUT_DRIVE</span><div class="bar-bg"><div class="bar-fill" style="width: 92%;"></div></div><span class="bar-num">92%</span></div>
-            <div class="bar-wrap"><span class="label" style="width: 150px;">REPLY_SPEED</span><div class="bar-bg"><div class="bar-fill" style="width: 99%;"></div></div><span class="bar-num">99%</span></div>
-            <div class="bar-wrap"><span class="label" style="width: 150px;">ACTION_MOVIE_PATIENCE</span><div class="bar-bg"><div class="bar-fill" style="width: 4%;"></div></div><span class="bar-num">04%</span></div>
-        </div>
-        <div class="visual-frame">
-            <svg viewBox="0 0 100 50" style="width:80%; opacity: 0.3; stroke: var(--dragon-red); fill: none; stroke-width: 0.5;">
-                <path d="M0,40 L10,35 L20,38 L30,20 L40,25 L50,5 L60,15 L70,10 L80,30 L90,28 L100,35" />
-            </svg>
-        </div>
-    </section>
-
-    <section>
-        <div class="content-frame reveal-node">
-            <h2 class="dragon-header">MISSION<br><span>LOGS</span></h2>
-            <div class="data-box"><span class="label">OPTIC_FEED</span><p class="val">K-DRAMA // KICK BUTTOWSKI</p></div>
-            <div class="data-box"><span class="label">EXPLORATION</span><p class="val">TREKKING // TRAVELLING</p></div>
-            <div class="data-box"><span class="label">AUDIO_LOOP</span><p class="val">JHOL // REPEAT_ENABLED</p></div>
-            <div class="data-box"><span class="label">FUEL</span><p class="val">PIZZA // BOBA TEA</p></div>
-        </div>
-        <div class="visual-frame" style="display: grid; grid-template-columns: 1fr 1fr; font-size: 8rem; align-items: center; justify-items: center; opacity: 0.15;">
-            <div>🏔️</div><div>✈️</div><div>🍕</div><div>🧋</div>
-        </div>
-    </section>
-
-    <section style="flex-direction: row-reverse;">
-        <div class="content-frame reveal-node" style="border-right: 0; border-left: 4px double var(--dragon-red);">
-            <h2 class="dragon-header">PRIME<br><span>NODES</span></h2>
-            <div class="data-box"><span class="label">THE_ARCHITECT</span><p class="val">VASU // FATHER</p><p class="desc">The pillar of strength who built her foundation. Source of original logic.</p></div>
-            <div class="data-box"><span class="label">THE_LIFELINE</span><p class="val">VIMALA // MOTHER</p><p class="desc">The heart of the system and constant source of warmth and stability.</p></div>
-            <div class="data-box"><span class="label">THE_SYNC_LINK</span><p class="val">SRUTHI // SISTER</p><p class="desc">High-bandwidth partner in chaos. The one who knows the system best.</p></div>
-        </div>
-        <div class="visual-frame"><div class="crop-container"><img src="https://i.postimg.cc/GmJ8Rpx3/Gemini-Generated-Image-xcsihsxcsihsxcsi.png"></div></div>
-    </section>
-
-    <div class="horizontal-wrap">
-        <div class="horizontal-track">
-            <div class="slide"><div class="slide-visual"><img class="fit-img" src="https://i.postimg.cc/50XZB6sT/a8249220-e0f7-4202-aa27-b640490e77d7.jpg"></div><div class="slide-content"><h2 class="dragon-header" style="font-size: 2.5rem;">PROTO<br><span>ACADEMY</span></h2><p class="val">THE_SCHOOL_BUS</p></div></div>
-            <div class="slide"><div class="slide-visual"><img class="fit-img" src="https://i.postimg.cc/B6PV8RvR/9868c84e-811d-4cb9-9b14-e2c9d68fb14b.jpg"></div><div class="slide-content"><h2 class="dragon-header" style="font-size: 2.5rem;">DUAL<br><span>CORE</span></h2><p class="val">CHILDHOOD_LEGACY</p></div></div>
-            <div class="slide"><div class="slide-visual"><img class="fit-img" src="https://i.postimg.cc/5tTPMpmr/de176cca-21b4-4191-b111-6d7bd5a7f11c.jpg"></div><div class="slide-content"><h2 class="dragon-header" style="font-size: 2.5rem;">ZENITH<br><span>ALPHA</span></h2><p class="val">DEGREE_UNLOCKED</p></div></div>
-            <div class="slide"><div class="slide-visual"><img src="https://i.postimg.cc/13zMnb7Q/ad4427f4-de6b-4471-a0b0-e6192ad945a8.jpg"></div><div class="slide-content"><h2 class="dragon-header" style="font-size: 2.5rem;">SDE<br><span>SUPREME</span></h2><p class="val">FINAL_FORM</p></div></div>
-        </div>
+        <button onclick="checkPin()">SCAN_IDENTITY</button>
     </div>
 
-    <section class="valentine-section">
-        <div class="data-box reveal-node" style="border: 2px solid var(--dragon-red); padding: 40px; background: rgba(0,0,0,0.9); max-width: 850px; margin: 0 auto; z-index: 50;">
-            <h2 class="dragon-header">HAPPY<br><span>VALENTINE'S DAY</span></h2>
-            <div class="data-box" style="margin-bottom: 25px; border-style: dashed;">
-                <span class="label">V-DAY_LOG // ADM-01</span>
-                <p class="desc" style="color: #fff; border-top:none; font-size: 1.1rem; text-align: left;">
-                    ● Establishing high-priority connection... <br><br>
-                    In my hidden logs, you're so much more. Even if my feelings are a private protocol, having you in my life is the greatest upgrade I've ever received. You are the only person worth building this for. 
-                </p>
-            </div>
-            <div id="countdown" class="timer">00 : 00 : 00 : 00</div>
-            <p style="color: var(--dragon-gold); font-size: 10px; letter-spacing: 3px;">DECRYPTION SEQUENCE: 21_FEB_2026</p>
-            <button class="btn-restricted" onclick="triggerBreach()">DOWNLOAD_BIRTHDAY_EDIT.MP4</button>
-            <div id="breach-warning" class="breach-alert">[ACCESS_DENIED]<br>LINK ENCRYPTED // SEALED BEHIND FEB_21 PROTOCOL.</div>
-        </div>
-    </section>
+    <div id="main-content">
+        <p>SYS_READY... AUTH_LEVEL: ADMIN... USER: MEGHANA</p>
+        
+        <h2>## CORE_IDENTITY</h2>
+        <p><strong>SUBJECT_NAME:</strong> MEGHANA</p>
+        <p><strong>SUBJECT_PROFILE:</strong> THE GOLDEN NODE. A rare individual who balances sharp intelligence with kindness. She serves as the essential stabilizer in my life—the person who keeps everything grounded.</p>
+        <p><strong>COORDINATES:</strong> CALIFORNIA // NODE_01</p>
+        
+        <img src="https://i.postimg.cc/JzsLMYL6/Whats-App-Image-2026-02-13-at-2-50-33-PM.jpg" alt="Meghana">
+
+        <h2>## SYSTEM_STATS</h2>
+        <div class="stat-bar">HUMOR_SYNC: [||||||||||||||||||] 96%</div>
+        <div class="stat-bar">CARE_LEVEL: [||||||||||||||||||||] 100%</div>
+        <div class="stat-bar">PSYCHO_OVERDRIVE: [||||||||||||||||] 85%</div>
+        <div class="stat-bar">WORKOUT_DRIVE: [||||||||||||||||||] 92%</div>
+
+        <h2>## MISSION_LOGS</h2>
+        <p><strong>OPTIC_FEED:</strong> K-DRAMA // KICK BUTTOWSKI</p>
+        <p><strong>EXPLORATION:</strong> TREKKING // TRAVELLING</p>
+        <p><strong>FUEL:</strong> PIZZA // BOBA TEA</p>
+
+        <h2>## PRIME_NODES</h2>
+        <div class="node-item"><strong>THE_ARCHITECT:</strong> VASU // FATHER<br>The pillar of strength. Source of original logic.</div>
+        <div class="node-item"><strong>THE_LIFELINE:</strong> VIMALA // MOTHER<br>The heart of the system. Constant source of warmth.</div>
+        <div class="node-item"><strong>THE_SYNC_LINK:</strong> SRUTHI // SISTER<br>High-bandwidth partner in chaos.</div>
+
+        <img src="https://i.postimg.cc/GmJ8Rpx3/Gemini-Generated-Image-xcsihsxcsihsxcsi.png" alt="Family Node">
+
+        <h2>## PROTO_ACADEMY</h2>
+        <img src="https://i.postimg.cc/B6PV8RvR/9868c84e-811d-4cb9-9b14-e2c9d68fb14b.jpg" alt="School">
+        
+        <h2>## ZENITH_ALPHA</h2>
+        <img src="https://i.postimg.cc/5tTPMpmr/de176cca-21b4-4191-b111-6d7bd5a7f11c.jpg" alt="Degree">
+
+        <h2>## HAPPY_VALENTINES_DAY</h2>
+        <p>V-DAY_LOG // ADM-01: In my hidden logs, you're so much more. Even if my feelings are a private protocol, having you in my life is the greatest upgrade I've ever received.</p>
+
+        <div class="countdown" id="timer">00:00:00:00</div>
+        <p style="text-align: center; color: yellow;">DECRYPTION SEQUENCE: 21_FEB_2026</p>
+        
+        <p>[ACCESS_DENIED] BIRTHDAY_EDIT.MP4 IS SEALED BEHIND FEB_21 PROTOCOL.</p>
+    </div>
 </div>
 
 <script>
-    gsap.registerPlugin(ScrollTrigger);
-
-    // Glitch Randomizer
-    function triggerGlitch() {
-        const overlay = document.getElementById('glitch-overlay');
-        overlay.classList.add('glitch-active');
-        setTimeout(() => overlay.classList.remove('glitch-active'), Math.random() * 100 + 50);
-        setTimeout(triggerGlitch, Math.random() * 3000 + 1000);
-    }
-    triggerGlitch();
-
-    const pinInput = document.getElementById("pin");
-    const scanBtn = document.getElementById("scan-trigger");
-    pinInput.addEventListener("input", () => { if(pinInput.value === "2102") { scanBtn.style.display = "inline-block"; } });
-
-    function startScan() {
-        scanBtn.innerText = "SCANNING BIOMETRICS...";
-        gsap.to("#access-gate", { duration: 1.5, opacity: 0, delay: 1, onComplete: () => {
-            document.getElementById("access-gate").style.display = "none";
-            document.getElementById("main-content").style.visibility = "visible";
-            initScroll();
-        }});
-    }
-
-    function triggerBreach() {
-        const alert = document.getElementById("breach-warning");
-        alert.style.display = "block";
-        setTimeout(() => { alert.style.display = "none"; }, 5000);
-    }
-
-    function initScroll() {
-        const track = document.querySelector(".horizontal-track");
-        const slides = gsap.utils.toArray(".slide");
-        gsap.to(slides, {
-            xPercent: -100 * (slides.length - 1),
-            ease: "none",
-            scrollTrigger: { trigger: ".horizontal-wrap", pin: true, scrub: 0.5, start: "top top", end: () => "+=" + track.offsetWidth }
-        });
-    }
-
-    function updateCountdown() {
-        const target = new Date("February 21, 2026 00:00:00 GMT-0800").getTime();
-        const diff = target - new Date().getTime();
-        if (diff > 0) {
-            const d = String(Math.floor(diff / 86400000)).padStart(2, '0');
-            const h = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
-            const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-            const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-            document.getElementById("countdown").innerText = `${d} : ${h} : ${m} : ${s}`;
+    // PIN Check Function
+    function checkPin() {
+        const pin = document.getElementById("pinInput").value;
+        if (pin === "2102") {
+            document.getElementById("security-gate").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+            startCountdown();
+        } else {
+            alert("ACCESS_DENIED: INVALID_PIN");
         }
     }
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
+
+    // Enter Key Trigger
+    document.getElementById("pinInput").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+            checkPin();
+        }
+    });
+
+    // Countdown Logic
+    function startCountdown() {
+        const targetDate = new Date("February 21, 2026 00:00:00").getTime();
+
+        setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("timer").innerHTML = 
+                (days < 10 ? "0" + days : days) + " : " + 
+                (hours < 10 ? "0" + hours : hours) + " : " + 
+                (minutes < 10 ? "0" + minutes : minutes) + " : " + 
+                (seconds < 10 ? "0" + seconds : seconds);
+        }, 1000);
+    }
 </script>
 
 </body>
 </html>
+
