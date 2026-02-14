@@ -97,55 +97,6 @@
         .breach-alert { color: var(--dragon-red); font-weight: bold; background: rgba(255,0,0,0.1); border: 1px solid var(--dragon-red); padding: 15px; margin-top: 20px; display: none; animation: blink 0.4s infinite alternate; }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
         .btn-restricted { border: 1px solid var(--dragon-red); color: var(--dragon-red); padding: 15px 30px; font-family: 'Orbitron'; background: transparent; cursor: pointer; margin-top: 10px; }
-    /* --- MOBILE REPAIR UNIT --- */
-        @media (max-width: 768px) {
-            section {
-                flex-direction: column !important; /* Stacks text on top of images */
-                height: auto;
-                min-height: 100vh;
-                margin-bottom: 50px;
-            }
-
-            .content-frame {
-                flex: 0 0 100%;
-                width: 100%;
-                padding: 40px 5%;
-                border-right: none;
-                border-bottom: 2px solid var(--dragon-red);
-            }
-
-            .visual-frame {
-                flex: 0 0 100%;
-                width: 100%;
-                height: 350px; /* Ensures images have space on mobile */
-            }
-
-            .dragon-header {
-                font-size: 2.5rem; /* Shrinks the headers for phone screens */
-            }
-
-            .val {
-                font-size: 1.2rem;
-            }
-
-            /* Fixes the Horizontal Slides for mobile */
-            .slide {
-                flex-direction: column !important;
-            }
-            
-            .slide-visual {
-                flex: 0 0 50%;
-            }
-            
-            .slide-content {
-                flex: 0 0 50%;
-                padding: 20px;
-            }
-
-            .gate-box {
-                width: 90%;
-            }
-        }
     </style>
 </head>
 <body>
@@ -306,4 +257,3 @@
 
 </body>
 </html>
-
